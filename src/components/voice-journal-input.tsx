@@ -20,13 +20,23 @@ export function VoiceJournalInput({ onTextChange, placeholder }: VoiceJournalInp
   onChangeRef.current = onTextChange;
 
   useEffect(() => {
-    if (isListening && transcript) {
+    if (isListening) {
+      if (transcript) {
+        const delta = transcript.slice(lastTranscriptRef.current.length);
+        if (delta) {
+          setText((prev) => prev + delta);
+        }
+      }
+      lastTranscriptRef.current = transcript;
+    } else if (transcript && transcript !== lastTranscriptRef.current) {
       const delta = transcript.slice(lastTranscriptRef.current.length);
       if (delta) {
         setText((prev) => prev + delta);
       }
+      lastTranscriptRef.current = '';
+    } else {
+      lastTranscriptRef.current = '';
     }
-    lastTranscriptRef.current = isListening ? transcript : '';
   }, [transcript, isListening]);
 
   useEffect(() => {

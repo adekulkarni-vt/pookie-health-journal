@@ -1,6 +1,7 @@
 'use client';
 
 import { createSupabaseClient } from '@/lib/supabase/client';
+import { getClientUrl } from '@/lib/url';
 import { useState } from 'react';
 import { Heart } from 'lucide-react';
 
@@ -20,7 +21,7 @@ export default function LoginPage() {
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${getClientUrl()}/auth/callback`,
         },
       });
 

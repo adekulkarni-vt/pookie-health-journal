@@ -29,7 +29,10 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     setDisplayText(finalRef.current + interimRef.current);
   }, []);
 
+  const userStoppedRef = useRef(false);
+
   const stopListening = useCallback(() => {
+    userStoppedRef.current = true;
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
@@ -42,6 +45,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
   const startListening = useCallback(() => {
     setError(null);
+    userStoppedRef.current = false;
     finalRef.current = '';
     interimRef.current = '';
     setDisplayText('');
@@ -87,7 +91,16 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
       finalRef.current = finalRef.current + interimRef.current;
       interimRef.current = '';
       updateDisplay();
-      setIsListening(false);
+
+      if (!userStoppedRef.current) {
+        try {
+          recognition.start();
+        } catch {
+          setIsListening(false);
+        }
+      } else {
+        setIsListening(false);
+      }
     };
 
     try {
