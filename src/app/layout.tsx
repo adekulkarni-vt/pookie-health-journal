@@ -1,11 +1,25 @@
 import type { Metadata } from 'next';
-import { Navigation } from '@/components/Navigation';
+import { Inter } from 'next/font/google';
 import './globals.css';
 
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+});
+
 export const metadata: Metadata = {
-  title: 'Pookie Health Journal',
-  description: 'A cute personal journaling application focused on health tracking and AI-powered insights',
+  title: 'PookieHealth',
+  description:
+    'A cute personal journaling application focused on health tracking and AI-powered insights',
   viewport: 'width=device-width, initial-scale=1',
+  icons: {
+    icon: [
+      {
+        url: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>',
+        type: 'image/svg+xml',
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -14,15 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="bg-white antialiased">
-        <Navigation />
-        <main className="flex-1">
-          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            {children}
-          </div>
-        </main>
-      </body>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <body className="min-h-screen antialiased">{children}</body>
     </html>
   );
 }

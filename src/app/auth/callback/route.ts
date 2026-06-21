@@ -1,19 +1,38 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { createSupabaseMiddlewareClient } from '@/lib/supabase/middleware';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  const error = requestUrl.searchParams.get('error');
+  const errorDescription = requestUrl.searchParams.get('error_description');
 
-  if (code) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  if (error) {
+    console.error(`OAuth error: ${error} - ${errorDescription}`);
+    return NextResponse.redirect(
+      new URL(`/login?error=${encodeURIComponent(error)}`, requestUrl.origin)
     );
-
-    await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL('/', request.url));
+  if (code) {
+    const response = NextResponse.redirect(new URL('/', requestUrl.origin));
+    const supabase = await createSupabaseMiddlewareClient(request, response);
+
+    const { error: exchangeError } =
+      await supabase.auth.exchangeCodeForSession(code);
+
+    if (exchangeError) {
+      console.error('Failed to exchange code for session:', exchangeError);
+      return NextResponse.redirect(
+        new URL(
+          `/login?error=${encodeURIComponent('Failed to sign in')}`,
+          requestUrl.origin
+        )
+      );
+    }
+
+    return response;
+  }
+
+  return NextResponse.redirect(new URL('/login', requestUrl.origin));
 }

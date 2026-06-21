@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface PlaceholderCardProps {
@@ -23,10 +22,7 @@ export function PlaceholderCard({
   color = 'pink',
 }: PlaceholderCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+    <div
       className={cn(
         'rounded-lg p-6 shadow-sm transition-transform hover:scale-105 hover:shadow-md',
         colorClasses[color]
@@ -35,6 +31,6 @@ export function PlaceholderCard({
       {icon && <div className="mb-4 text-2xl">{icon}</div>}
       <h2 className="mb-2 text-xl font-semibold text-gray-900">{title}</h2>
       <p className="text-gray-700">{description}</p>
-    </motion.div>
+    </div>
   );
 }

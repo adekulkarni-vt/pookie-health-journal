@@ -1,9 +1,3 @@
-/**
- * Database type definitions
- * These types represent the structure of Supabase database tables
- * Placeholder - to be expanded with actual schema
- */
-
 export type Database = {
   public: {
     Tables: {
@@ -30,33 +24,94 @@ export type Database = {
           avatar_url?: string | null;
         };
       };
-      journal_entries: {
+      entries: {
         Row: {
           id: string;
-          user_id: string;
+          user_id: string | null;
           created_at: string;
-          updated_at: string;
-          date: string;
-          content: string | null;
+          journal_text: string;
+          sleep_hours: number | null;
+          weight: number | null;
+          stress_level: number | null;
+          day_rating: number | null;
           mood: string | null;
+          ai_title: string | null;
+          ai_summary: string | null;
+          severity: number | null;
         };
         Insert: {
           id?: string;
-          user_id: string;
+          user_id?: string | null;
           created_at?: string;
-          updated_at?: string;
-          date: string;
-          content?: string | null;
+          journal_text: string;
+          sleep_hours?: number | null;
+          weight?: number | null;
+          stress_level?: number | null;
+          day_rating?: number | null;
           mood?: string | null;
+          ai_title?: string | null;
+          ai_summary?: string | null;
+          severity?: number | null;
         };
         Update: {
           id?: string;
-          user_id?: string;
+          user_id?: string | null;
           created_at?: string;
-          updated_at?: string;
-          date?: string;
-          content?: string | null;
+          journal_text?: string;
+          sleep_hours?: number | null;
+          weight?: number | null;
+          stress_level?: number | null;
+          day_rating?: number | null;
           mood?: string | null;
+          ai_title?: string | null;
+          ai_summary?: string | null;
+          severity?: number | null;
+        };
+      };
+      photos: {
+        Row: {
+          id: string;
+          entry_id: string;
+          user_id: string | null;
+          storage_path: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          entry_id: string;
+          user_id?: string | null;
+          storage_path: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          entry_id?: string;
+          user_id?: string | null;
+          storage_path?: string;
+          created_at?: string;
+        };
+      };
+      weekly_reflections: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          week_start: string;
+          reflection_text: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          week_start: string;
+          reflection_text: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          week_start?: string;
+          reflection_text?: string;
+          created_at?: string;
         };
       };
       symptom_entries: {

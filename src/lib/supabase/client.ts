@@ -1,24 +1,17 @@
-import { createClient } from '@supabase/supabase-js';
+'use client';
 
-let supabaseClient: ReturnType<typeof createClient> | null = null;
+import { createBrowserClient } from '@supabase/ssr';
 
-export function getSupabaseClient() {
-  if (typeof window === 'undefined') {
-    throw new Error('Supabase client can only be used in the browser');
+export function createSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      'Missing Supabase environment variables. Please check your .env.local file.'
+    );
   }
 
-  if (!supabaseClient) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!url || !key) {
-      throw new Error(
-        'Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'
-      );
-    }
-
-    supabaseClient = createClient(url, key);
-  }
-
-  return supabaseClient;
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
 }
+

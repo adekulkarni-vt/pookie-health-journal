@@ -1,94 +1,239 @@
 # Pookie Health Journal - Database Schema
 
-## Overview
+## Philosophy
 
-This document outlines the planned database schema for the Pookie Health Journal application. The schema is built on Supabase PostgreSQL.
+This application is an AI-powered journal, not a medical database.
 
-## Tables
+The source of truth is always:
 
-### 1. `profiles`
+* Raw journal entries
+* AI-generated summaries
 
-User profile information.
+We intentionally avoid extracting foods, symptoms, medications, or other entities into separate tables.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | uuid | PRIMARY KEY, FK users.id | User identifier |
-| created_at | timestamp | DEFAULT now() | Account creation date |
-| updated_at | timestamp | DEFAULT now() | Last profile update |
-| username | text | | Display name |
-| avatar_url | text | | Profile picture URL |
+Instead, AI creates compressed memories that can later be used for retrieval and analysis.
 
-### 2. `journal_entries`
+---
 
-Daily journal entries for health tracking.
+# Tables
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | uuid | PRIMARY KEY | Entry identifier |
-| user_id | uuid | FK profiles.id | Entry owner |
-| created_at | timestamp | DEFAULT now() | Entry creation date |
-| updated_at | timestamp | DEFAULT now() | Last update |
-| date | date | | Entry date |
-| content | text | | Journal content |
-| mood | text | | User's mood (optional) |
+## entries
 
-### 3. `symptom_entries`
+Purpose:
 
-Symptom tracking entries.
+Primary journal storage.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | uuid | PRIMARY KEY | Entry identifier |
-| user_id | uuid | FK profiles.id | Entry owner |
-| created_at | timestamp | DEFAULT now() | Entry creation date |
-| updated_at | timestamp | DEFAULT now() | Last update |
-| date | date | | Symptom date |
-| symptom | text | | Symptom description |
-| severity | integer | 1-10 | Symptom severity level |
+Contains:
 
-### 4. `gastritis_flare_entries`
+* User-entered data
+* AI-generated memory of the entry
 
-Gastritis flare tracking (planned).
+Columns:
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | uuid | PRIMARY KEY | Entry identifier |
-| user_id | uuid | FK profiles.id | Entry owner |
-| created_at | timestamp | DEFAULT now() | Entry creation date |
-| updated_at | timestamp | DEFAULT now() | Last update |
-| date | date | | Flare date |
-| severity | integer | 1-10 | Flare severity |
-| triggers | text[] | | Potential triggers |
-| relief_measures | text[] | | What helped |
-| notes | text | | Additional notes |
+| Column       | Type        | Description                           |
+| ------------ | ----------- | ------------------------------------- |
+| id           | uuid        | Primary key                           |
+| user_id      | uuid        | References auth.users(id)             |
+| created_at   | timestamptz | Entry creation timestamp              |
+| journal_text | text        | Raw journal content                   |
+| sleep_hours  | numeric     | User entered sleep duration           |
+| weight       | numeric     | User entered weight                   |
+| stress_level | integer     | User entered stress level (1-5)       |
+| day_rating   | integer     | User entered overall day rating (1-5) |
+| mood         | text        | AI-generated mood                     |
+| ai_title     | text        | AI-generated title                    |
+| ai_summary   | text        | AI-generated summary                  |
+| severity     | integer     | AI-generated severity score (1-5)     |
 
-### 5. `ai_insights`
+---
 
-Stored AI-generated insights (planned).
+## Example Entry
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | uuid | PRIMARY KEY | Insight identifier |
-| user_id | uuid | FK profiles.id | User |
-| created_at | timestamp | DEFAULT now() | Creation date |
-| insight_type | text | | Type of insight |
-| content | text | | Insight content |
-| metadata | jsonb | | Additional data |
+Raw Journal:
 
-## Indexes (Planned)
+Had chai in the morning.
 
-- `journal_entries(user_id, date)` - For efficient user + date queries
-- `symptom_entries(user_id, date)` - For efficient symptom queries
-- `gastritis_flare_entries(user_id, date)` - For efficient flare queries
+Work was stressful.
 
-## Row Level Security (Planned)
+Felt nauseous after lunch.
 
-- Users can only access their own entries
-- Service role has full access for backend operations
+Didn't sleep well.
 
-## Notes
+Stored Data:
 
-- All timestamps use UTC timezone
-- UUIDs are used for all primary keys
-- Soft deletes not currently planned; consider for future implementation
-- Archive tables may be created for historical data
+{
+"ai_title": "Stressful day with afternoon nausea",
+
+"ai_summary": "Poor sleep and work stress were major themes. Nausea developed after lunch and contributed to a difficult day overall.",
+
+"mood": "stressed",
+
+"severity": 4
+}
+
+---
+
+## Severity Scale
+
+1 = Excellent day
+
+2 = Mild issues
+
+3 = Moderate issues
+
+4 = Significant symptoms
+
+5 = Severe symptoms
+
+---
+
+## Mood Values
+
+Allowed values:
+
+* happy
+* good
+* neutral
+* anxious
+* stressed
+* sad
+* frustrated
+* tired
+
+---
+
+## photos
+
+Purpose:
+
+Stores uploaded images associated with journal entries.
+
+Examples:
+
+* meal photos
+* swelling photos
+* medication photos
+* health report photos
+
+Columns:
+
+| Column       | Type        |
+| ------------ | ----------- |
+| id           | uuid        |
+| user_id      | uuid        |
+| entry_id     | uuid        |
+| storage_path | text        |
+| created_at   | timestamptz |
+
+---
+
+## weekly_reflections
+
+Purpose:
+
+Stores AI-generated weekly reflections.
+
+These are generated periodically from journal entries.
+
+Columns:
+
+| Column          | Type        |
+| --------------- | ----------- |
+| id              | uuid        |
+| user_id         | uuid        |
+| week_start      | date        |
+| reflection_text | text        |
+| created_at      | timestamptz |
+
+---
+
+# AI Memory Architecture
+
+The system uses two levels of memory.
+
+## Level 1
+
+Compressed Memory
+
+Fields:
+
+* ai_title
+* ai_summary
+* mood
+* severity
+
+Used for:
+
+* timeline
+* dashboards
+* AI retrieval
+* weekly reflections
+
+These records are small, cheap, and fast to analyze.
+
+---
+
+## Level 2
+
+Raw Journal
+
+Field:
+
+* journal_text
+
+Used when deeper context is needed.
+
+The raw journal remains the ultimate source of truth.
+
+---
+
+# Ask My Diary Retrieval Strategy
+
+When a user asks a question:
+
+1. Determine date range.
+
+Examples:
+
+* yesterday
+* last week
+* June
+* this month
+
+2. Retrieve:
+
+* created_at
+* ai_title
+* ai_summary
+
+for matching entries.
+
+3. Analyze summaries first.
+
+4. If additional detail is required:
+
+Retrieve full journal_text entries.
+
+5. Generate answer.
+
+---
+
+# Explicit Non-Goals
+
+We intentionally do NOT store:
+
+* foods table
+* symptoms table
+* medications table
+* trigger tables
+* embeddings
+* vectors
+* RAG indexes
+
+The application relies on:
+
+* high-quality journal entries
+* high-quality summaries
+* Gemini reasoning
+
+rather than heavy data normalization.
