@@ -29,6 +29,7 @@ export type Database = {
           id: string;
           user_id: string | null;
           created_at: string;
+          entry_date: string;
           journal_text: string;
           sleep_hours: number | null;
           weight: number | null;
@@ -43,6 +44,7 @@ export type Database = {
           id?: string;
           user_id?: string | null;
           created_at?: string;
+          entry_date?: string;
           journal_text: string;
           sleep_hours?: number | null;
           weight?: number | null;
@@ -57,6 +59,7 @@ export type Database = {
           id?: string;
           user_id?: string | null;
           created_at?: string;
+          entry_date?: string;
           journal_text?: string;
           sleep_hours?: number | null;
           weight?: number | null;
@@ -112,6 +115,29 @@ export type Database = {
           week_start?: string;
           reflection_text?: string;
           created_at?: string;
+        };
+      };
+      dashboard_insights: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          insight: string;
+          source_entry_date: string | null;
+          generated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          insight: string;
+          source_entry_date?: string | null;
+          generated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          insight?: string;
+          source_entry_date?: string | null;
+          generated_at?: string;
         };
       };
       symptom_entries: {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Moon, Weight, Heart, Calendar, ImageOff } from 'lucide-react';
+import { Moon, Weight, Heart, Calendar, ImageOff, Pencil } from 'lucide-react';
 import type { JournalEntry, Mood } from '@/types';
 
 const STRESS_LABELS: Record<number, string> = {
@@ -33,20 +33,21 @@ const MOOD_EMOJIS: Record<Mood, string> = {
 
 interface EntryCardProps {
   entry: JournalEntry;
+  onEdit?: (entry: JournalEntry) => void;
 }
 
-export function EntryCard({ entry }: EntryCardProps) {
+export function EntryCard({ entry, onEdit }: EntryCardProps) {
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
 
-  const date = new Date(entry.created_at).toLocaleDateString('en-US', {
+  const date = new Date(entry.entry_date + 'T12:00:00').toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
   });
 
-  const shortDate = new Date(entry.created_at).toLocaleDateString('en-US', {
+  const shortDate = new Date(entry.entry_date + 'T12:00:00').toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -68,6 +69,16 @@ export function EntryCard({ entry }: EntryCardProps) {
             <div className="flex items-center gap-2">
               {moodEmoji && (
                 <span className="text-xl" title={entry.mood ?? ''}>{moodEmoji}</span>
+              )}
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={() => onEdit(entry)}
+                  className="rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Edit entry"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
               )}
             </div>
           </div>

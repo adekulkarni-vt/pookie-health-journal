@@ -16,6 +16,7 @@ export type JournalEntry = {
   id: string;
   user_id: string | null;
   created_at: string;
+  entry_date: string;
   journal_text: string;
   sleep_hours: number | null;
   weight: number | null;

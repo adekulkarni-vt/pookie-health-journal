@@ -7,9 +7,10 @@ import type { JournalEntry } from '@/types';
 
 interface TimelineProps {
   refreshTrigger?: number;
+  onEdit?: (entry: JournalEntry) => void;
 }
 
-export function Timeline({ refreshTrigger = 0 }: TimelineProps) {
+export function Timeline({ refreshTrigger = 0, onEdit }: TimelineProps) {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +49,6 @@ export function Timeline({ refreshTrigger = 0 }: TimelineProps) {
   if (loading) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">My Journey</h2>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
@@ -59,7 +59,6 @@ export function Timeline({ refreshTrigger = 0 }: TimelineProps) {
   if (error) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">My Journey</h2>
         <div className="rounded-xl border border-border bg-card p-6 text-center">
           <p className="text-sm text-destructive">{error}</p>
           <button
@@ -77,7 +76,6 @@ export function Timeline({ refreshTrigger = 0 }: TimelineProps) {
   if (entries.length === 0) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">My Journey</h2>
         <div className="rounded-xl border border-border bg-card p-10 text-center space-y-3">
           <span className="text-4xl">🌷</span>
           <p className="text-base font-medium text-foreground">
@@ -93,12 +91,9 @@ export function Timeline({ refreshTrigger = 0 }: TimelineProps) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-foreground">My Journey</h2>
-      <div className="space-y-4">
-        {entries.map((entry) => (
-          <EntryCard key={entry.id} entry={entry} />
-        ))}
-      </div>
+      {entries.map((entry) => (
+        <EntryCard key={entry.id} entry={entry} onEdit={onEdit} />
+      ))}
     </div>
   );
 }

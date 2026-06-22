@@ -1,7 +1,6 @@
 import { AuthenticatedNavigation } from '@/components/AuthenticatedNavigation';
 import { ToastProvider } from '@/hooks/use-toast';
 import { Toaster } from '@/components/toaster';
-import { QuickNotesFab } from '@/components/QuickNotesFab';
 
 export default function AuthenticatedLayout({
   children,
@@ -16,7 +15,6 @@ export default function AuthenticatedLayout({
           {children}
         </div>
       </main>
-      <QuickNotesFab />
       <Toaster />
     </ToastProvider>
   );

@@ -3,7 +3,7 @@ import { requireUser } from '@/lib/auth';
 import { requireWhitelist } from '@/lib/whitelist';
 import { createServiceClient } from '@/lib/supabase/service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { JOURNAL_MEMORY_PROMPT } from '@/gemini/prompts';
+import { JOURNAL_AND_INSIGHT_PROMPT } from '@/gemini/prompts';
 import { MOOD_VALUES } from '@/types';
 import type { Mood } from '@/types';
 
@@ -17,7 +17,7 @@ export async function GET() {
       .from('entries')
       .select('*, photos(*)')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .order('entry_date', { ascending: false });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -66,13 +66,6 @@ export async function GET() {
   }
 }
 
-function todayRange() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
-  return { start, end };
-}
-
 export async function POST(request: NextRequest) {
   try {
     const user = await requireUser();
@@ -80,7 +73,7 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient();
 
     const body = await request.json();
-    const { text, sleep_hours, weight, stress_level, mood } = body;
+    const { text, sleep_hours, weight, stress_level, mood, entry_date } = body;
 
     if (!text && sleep_hours == null && weight == null && stress_level == null && mood == null) {
       return NextResponse.json(
@@ -89,14 +82,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { start, end } = todayRange();
+    const journalDate = entry_date || new Date().toISOString().split('T')[0];
+
+    // Fetch snippets for the journal's date
+    const snippetStart = `${journalDate}T00:00:00Z`;
+    const snippetEnd = `${journalDate}T23:59:59Z`;
 
     const { data: snippets } = await supabase
       .from('journal_snippets')
       .select('content, created_at')
       .eq('user_id', user.id)
-      .gte('created_at', start)
-      .lt('created_at', end)
+      .gte('created_at', snippetStart)
+      .lte('created_at', snippetEnd)
       .order('created_at', { ascending: true });
 
     const snippetCount = snippets?.length ?? 0;
@@ -117,12 +114,39 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Entries POST] Input: sleep=${sleep_hours} stress=${stress_level} weight=${weight} day_rating=${mood} text_len=${(text ?? '').length} snippets=${snippetCount}`);
 
+    // Check for existing entry on this date
+    const { data: existingEntry } = await supabase
+      .from('entries')
+      .select('id, journal_text, sleep_hours, weight, stress_level, day_rating')
+      .eq('user_id', user.id)
+      .eq('entry_date', journalDate)
+      .maybeSingle();
+
+    const isUpdate = !!existingEntry;
+
+    // Merge journal_text if updating
+    let mergedText = text || '';
+    if (isUpdate && existingEntry.journal_text) {
+      if (text) {
+        mergedText = existingEntry.journal_text + '\n\n---\n\n' + text;
+      } else {
+        mergedText = existingEntry.journal_text;
+      }
+    }
+
+    // Resolve field values: new values override, existing values used as defaults
+    const finalSleep = sleep_hours ?? (isUpdate ? existingEntry.sleep_hours : null);
+    const finalWeight = weight ?? (isUpdate ? existingEntry.weight : null);
+    const finalStress = stress_level ?? (isUpdate ? existingEntry.stress_level : null);
+    const finalMood = mood ?? (isUpdate ? existingEntry.day_rating : null);
+
     let ai_title: string | null = null;
     let ai_summary: string | null = null;
     let ai_mood: Mood | null = null;
     let severity: number | null = null;
+    let dashboardInsight: string | null = null;
 
-    if (text) {
+    if (mergedText) {
       const apiKey = process.env.GEMINI_API_KEY;
 
       if (!apiKey) {
@@ -132,18 +156,30 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Fetch recent entries for dashboard insight context
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const startStr = sevenDaysAgo.toISOString().split('T')[0];
+      const { data: recentEntries } = await supabase
+        .from('entries')
+        .select('entry_date, ai_summary, mood, severity, sleep_hours, stress_level')
+        .eq('user_id', user.id)
+        .gte('entry_date', startStr)
+        .order('entry_date', { ascending: false });
+
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
         model: 'gemini-2.5-flash-lite',
       });
 
-      const prompt = JOURNAL_MEMORY_PROMPT({
-        journal_text: text,
-        sleep_hours: sleep_hours ?? null,
-        weight: weight ?? null,
-        stress_level: stress_level ?? null,
-        day_rating: mood ?? null,
+      const prompt = JOURNAL_AND_INSIGHT_PROMPT({
+        journal_text: mergedText,
+        sleep_hours: finalSleep,
+        weight: finalWeight,
+        stress_level: finalStress,
+        day_rating: finalMood,
         quick_notes: quickNotesBlock || undefined,
+        recentEntries: recentEntries ?? [],
       });
 
       try {
@@ -168,7 +204,8 @@ export async function POST(request: NextRequest) {
         severity = typeof parsed.severity === 'number' && parsed.severity >= 1 && parsed.severity <= 5
           ? parsed.severity
           : null;
-        console.log(`[Entries POST] Gemini result: title="${ai_title}" mood=${ai_mood} severity=${severity} summary_len=${(ai_summary ?? '').length}`);
+        dashboardInsight = typeof parsed.dashboard_insight === 'string' ? parsed.dashboard_insight : null;
+        console.log(`[Entries POST] Gemini result: title="${ai_title}" mood=${ai_mood} severity=${severity} summary_len=${(ai_summary ?? '').length} insight_len=${(dashboardInsight ?? '').length}`);
       } catch (geminiError: unknown) {
         const message = geminiError instanceof Error ? geminiError.message : String(geminiError);
         console.error('Gemini memory generation error:', message);
@@ -179,25 +216,38 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { data: entry, error } = await supabase
-      .from('entries')
-      .insert({
-        user_id: user.id,
-        journal_text: text || '',
-        sleep_hours: sleep_hours ?? null,
-        weight: weight ?? null,
-        stress_level: stress_level ?? null,
-        day_rating: mood ?? null,
-        ai_title,
-        ai_summary,
-        mood: ai_mood,
-        severity,
-      })
-      .select()
-      .single();
+    const entryData = {
+      user_id: user.id,
+      entry_date: journalDate,
+      journal_text: mergedText || '',
+      sleep_hours: finalSleep,
+      weight: finalWeight,
+      stress_level: finalStress,
+      day_rating: finalMood,
+      ai_title,
+      ai_summary,
+      mood: ai_mood,
+      severity,
+    };
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    let entry;
+    if (isUpdate) {
+      const { data, error } = await supabase
+        .from('entries')
+        .update(entryData)
+        .eq('id', existingEntry.id)
+        .select()
+        .single();
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      entry = data;
+    } else {
+      const { data, error } = await supabase
+        .from('entries')
+        .insert(entryData)
+        .select()
+        .single();
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      entry = data;
     }
 
     if (snippetCount > 0) {
@@ -205,11 +255,26 @@ export async function POST(request: NextRequest) {
         .from('journal_snippets')
         .delete()
         .eq('user_id', user.id)
-        .gte('created_at', start)
-        .lt('created_at', end);
+        .gte('created_at', snippetStart)
+        .lte('created_at', snippetEnd);
     }
 
-    return NextResponse.json({ entry }, { status: 201 });
+    // Save dashboard insight from the same Gemini response
+    if (dashboardInsight) {
+      await supabase
+        .from('dashboard_insights')
+        .delete()
+        .eq('user_id', user.id);
+      await supabase
+        .from('dashboard_insights')
+        .insert({
+          user_id: user.id,
+          insight: dashboardInsight,
+          source_entry_date: journalDate,
+        });
+    }
+
+    return NextResponse.json({ entry, isUpdate }, { status: isUpdate ? 200 : 201 });
   } catch (error) {
     if (
       error instanceof Error &&

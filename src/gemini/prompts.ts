@@ -59,6 +59,57 @@ User data for today:
 ${JSON.stringify(input, null, 2)}${input.quick_notes ? `\n\nToday's Quick Notes (timeline of observations):\n${input.quick_notes}` : ''}`;
 }
 
+export interface CombinedInput extends JournalInput {
+  recentEntries?: {
+    entry_date: string;
+    ai_summary?: string | null;
+    mood?: string | null;
+    severity?: number | null;
+    sleep_hours?: number | null;
+    stress_level?: number | null;
+  }[];
+}
+
+export function JOURNAL_AND_INSIGHT_PROMPT(input: CombinedInput) {
+  const now = new Date().toLocaleString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    hour: 'numeric', minute: 'numeric',
+  });
+  const weekData = input.recentEntries && input.recentEntries.length > 0
+    ? `\n\nRecent week of entries for weekly insight:\n${JSON.stringify(input.recentEntries, null, 2)}`
+    : '\n\nNo recent entries available for weekly insight.';
+
+  return `Current date and time: ${now}
+
+You are a journal memory assistant. Generate a compressed memory of this day AND a weekly dashboard insight.
+
+Return ONLY valid JSON with this exact structure (no markdown, no code fences):
+{
+  "title": "2-3 word diary-style title capturing the day",
+  "summary": "Compact factual summary. Prioritize in this order: 1) Symptoms 2) Foods/beverages 3) Medications/supplements 4) Sleep quality 5) Stress level 6) Significant events. Be specific (e.g. 'Nausea after lunch' not 'Had a bad day'). Optimize for pattern detection. Do not diagnose. Do not provide medical advice.",
+  "mood": "Exactly one of: happy, good, neutral, anxious, stressed, sad, frustrated, tired",
+  "severity": 3,
+  "dashboard_insight": "Exactly 2 sentences. One encouraging observation about their recent week. One pattern worth noticing based on the data. Be warm and supportive. Do not diagnose or give medical advice."
+}
+
+Severity guide:
+1 = Excellent day
+2 = Mild issues
+3 = Moderate issues
+4 = Significant symptoms or disruption
+5 = Severe symptoms or highly difficult day
+
+Dashboard insight guide:
+- Base on the recent week of entries, not just today.
+- First sentence: an encouraging observation.
+- Second sentence: a pattern worth noticing.
+- Reference specific metrics (mood, sleep, stress, severity) when evidence exists.
+- If fewer than 3 entries exist in the week, give a brief warm observation and skip the pattern.
+
+User data for today:
+${JSON.stringify(input, null, 2)}${input.quick_notes ? `\n\nToday's Quick Notes (timeline of observations):\n${input.quick_notes}` : ''}${weekData}`;
+}
+
 export const RESPONSE_TEMPLATES = {
   journalInsight: (date: string, mood: string | null) => `
 Generate a brief, warm response to a journal entry from ${date}${

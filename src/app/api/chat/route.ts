@@ -17,8 +17,8 @@ function formatShortDate(iso: string): string {
   });
 }
 
-function formatEntry(e: { created_at: string; ai_title: string | null; ai_summary: string | null; mood: string | null; severity: number | null }): string {
-  const date = formatShortDate(e.created_at);
+function formatEntry(e: { entry_date: string; ai_title: string | null; ai_summary: string | null; mood: string | null; severity: number | null }): string {
+  const date = formatShortDate(e.entry_date + 'T12:00:00');
   const parts = [`[${date}]`];
   if (e.ai_title) parts.push(e.ai_title);
   if (e.ai_summary) parts.push(`Summary: ${e.ai_summary}`);
@@ -33,7 +33,7 @@ const encoder = new TextEncoder();
 
 interface EntryResult {
   formatted: string;
-  entries: { created_at: string; ai_title: string | null; ai_summary: string | null; mood: string | null; severity: number | null }[];
+  entries: { entry_date: string; ai_title: string | null; ai_summary: string | null; mood: string | null; severity: number | null }[];
 }
 
 async function queryEntries(userId: string, hasDateRef: boolean, startDate: string | null, endDate: string): Promise<EntryResult> {
@@ -44,11 +44,11 @@ async function queryEntries(userId: string, hasDateRef: boolean, startDate: stri
   if (hasDateRef && startDate) {
     const { data } = await supabase
       .from('entries')
-      .select('created_at, ai_title, ai_summary, mood, severity')
+      .select('entry_date, ai_title, ai_summary, mood, severity')
       .eq('user_id', userId)
-      .gte('created_at', startDate)
-      .lte('created_at', `${endDate}T23:59:59Z`)
-      .order('created_at', { ascending: false });
+      .gte('entry_date', startDate)
+      .lte('entry_date', endDate)
+      .order('entry_date', { ascending: false });
 
     entries = data ?? [];
   } else {
@@ -58,10 +58,10 @@ async function queryEntries(userId: string, hasDateRef: boolean, startDate: stri
 
     const { data } = await supabase
       .from('entries')
-      .select('created_at, ai_title, ai_summary, mood, severity')
+      .select('entry_date, ai_title, ai_summary, mood, severity')
       .eq('user_id', userId)
-      .gte('created_at', defaultStart)
-      .order('created_at', { ascending: false })
+      .gte('entry_date', defaultStart)
+      .order('entry_date', { ascending: false })
       .limit(10);
 
     entries = data ?? [];
@@ -72,10 +72,10 @@ async function queryEntries(userId: string, hasDateRef: boolean, startDate: stri
   }
 
   const sorted = [...entries].sort((a, b) =>
-    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    new Date(a.entry_date + 'T12:00:00').getTime() - new Date(b.entry_date + 'T12:00:00').getTime()
   );
-  const earliest = formatShortDate(sorted[0].created_at);
-  const latest = formatShortDate(sorted[sorted.length - 1].created_at);
+  const earliest = formatShortDate(sorted[0].entry_date + 'T12:00:00');
+  const latest = formatShortDate(sorted[sorted.length - 1].entry_date + 'T12:00:00');
 
   const metadata = `Journal Dataset:\n* Total Entries: ${entries.length}\n* Date Range: ${earliest} -> ${latest}\n\n`;
   const body = entries.map(formatEntry).join('\n\n');
@@ -184,15 +184,15 @@ export async function POST(request: NextRequest) {
     const earliestDate = entryResult.entries.length > 0
       ? formatShortDate(
           [...entryResult.entries].sort(
-            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          )[0].created_at
+            (a, b) => new Date(a.entry_date + 'T12:00:00').getTime() - new Date(b.entry_date + 'T12:00:00').getTime()
+          )[0].entry_date + 'T12:00:00'
         )
       : null;
     const latestDate = entryResult.entries.length > 0
       ? formatShortDate(
           [...entryResult.entries].sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          )[0].created_at
+            (a, b) => new Date(b.entry_date + 'T12:00:00').getTime() - new Date(a.entry_date + 'T12:00:00').getTime()
+          )[0].entry_date + 'T12:00:00'
         )
       : null;
 
@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
       console.log('\n=== USER QUESTION ===');
       console.log(message);
       console.log('\n=== RETRIEVED ENTRY DATES ===');
-      entryResult.entries.forEach((e) => console.log(`  ${formatShortDate(e.created_at)}`));
+      entryResult.entries.forEach((e) => console.log(`  ${formatShortDate(e.entry_date + 'T12:00:00')}`));
       console.log('\n=== FULL PROMPT ===');
       console.log(fullPrompt);
       console.log('\n======================\n');
