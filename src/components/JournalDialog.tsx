@@ -83,7 +83,7 @@ export function JournalDialog({ open, onClose, onSaved, entry }: JournalDialogPr
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end sm:items-center sm:justify-center">
       <div
-        className="absolute inset-0 bg-black/40"
+        className="fixed inset-0 bg-black/40"
         onClick={onClose}
       />
       <div className="relative z-10 w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto rounded-none sm:rounded-2xl bg-card border-0 sm:border-border shadow-xl animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200 flex flex-col">
