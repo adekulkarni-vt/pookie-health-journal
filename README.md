@@ -55,7 +55,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - `/` - Home page
 - `/dashboard` - Analytics and trends
 - `/ask` - AI chat interface (Pookie)
-- `/wins` - Health achievements
 
 ## Tech Stack
 

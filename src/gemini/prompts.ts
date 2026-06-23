@@ -110,6 +110,53 @@ User data for today:
 ${JSON.stringify(input, null, 2)}${input.quick_notes ? `\n\nToday's Quick Notes (timeline of observations):\n${input.quick_notes}` : ''}${weekData}`;
 }
 
+export function REGENERATE_INSIGHT_PROMPT(input: {
+  recentEntries: CombinedInput['recentEntries'];
+}) {
+  const now = new Date().toLocaleString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', second: 'numeric',
+  });
+
+  const seed = Date.now() + Math.floor(Math.random() * 1000000);
+  const angle = seed % 4;
+
+  const angleInstructions = [
+    'Focus on positive trends and improvements. Highlight what has been going well.',
+    'Focus on a specific metric (sleep, mood, stress, or severity). Analyze patterns in that one area.',
+    'Compare early-week vs late-week patterns. Note any shifts or changes.',
+    'Focus on overall wellness and progress. Take a big-picture view of their week.',
+  ];
+
+  const weekData = input.recentEntries && input.recentEntries.length > 0
+    ? JSON.stringify(input.recentEntries, null, 2)
+    : 'No recent entries available.';
+
+  return `Current date and time: ${now}
+Variation seed: ${seed}
+
+You are a journal memory assistant. Generate a fresh weekly dashboard insight based on the user's recent journal entries.
+
+Return ONLY valid JSON with this exact structure (no markdown, no code fences):
+{
+  "dashboard_insight": "Exactly 2 sentences. One encouraging observation about their recent week. One pattern worth noticing based on the data. Be warm and supportive. Do not diagnose or give medical advice."
+}
+
+Dashboard insight guide:
+- Base on the recent week of entries provided below.
+- First sentence: an encouraging observation.
+- Second sentence: a pattern worth noticing.
+- Reference specific metrics (mood, sleep, stress, severity) when evidence exists.
+- If fewer than 3 entries exist in the week, give a brief warm observation and skip the pattern.
+- CRITICAL: Use the Variation seed to produce a genuinely unique insight every time. Take a completely different angle based on the seed value.
+
+Angle for this generation (use this as your primary framing):
+${angleInstructions[angle]}
+
+Recent week of entries:
+${weekData}`;
+}
+
 export const RESPONSE_TEMPLATES = {
   journalInsight: (date: string, mood: string | null) => `
 Generate a brief, warm response to a journal entry from ${date}${

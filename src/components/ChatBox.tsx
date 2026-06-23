@@ -10,8 +10,35 @@ interface Message {
   content: string;
 }
 
+const STORAGE_KEY = 'pookie-chat-messages';
+
+function loadMessages(): Message[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (m: unknown) =>
+        typeof m === 'object' &&
+        m !== null &&
+        (m as Message).role === 'user' || (m as Message).role === 'assistant'
+    );
+  } catch {
+    return [];
+  }
+}
+
+function saveMessages(messages: Message[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  } catch {
+    // storage full or unavailable
+  }
+}
+
 export function ChatBox() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(loadMessages);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -19,6 +46,10 @@ export function ChatBox() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  useEffect(() => {
+    saveMessages(messages);
   }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {

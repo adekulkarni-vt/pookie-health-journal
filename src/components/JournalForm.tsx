@@ -118,7 +118,7 @@ export function JournalForm({
           ) : (
             <>
               <Sparkles className="h-4 w-4" />
-              {isEdit ? 'Save Changes' : "Save Today's Entry"}
+              {isEdit ? 'Save Changes' : 'Save Entry'}
             </>
           )}
         </button>

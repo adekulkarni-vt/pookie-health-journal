@@ -7,17 +7,30 @@ import { JOURNAL_AND_INSIGHT_PROMPT } from '@/gemini/prompts';
 import { MOOD_VALUES } from '@/types';
 import type { Mood } from '@/types';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await requireUser();
     if (user.email) await requireWhitelist(user.email);
     const supabase = createServiceClient();
 
-    const { data: entries, error } = await supabase
+    const url = new URL(request.url);
+    const limitParam = url.searchParams.get('limit');
+    const offsetParam = url.searchParams.get('offset');
+    const hasPagination = limitParam !== null;
+    const limit = hasPagination ? Math.max(1, parseInt(limitParam ?? '20')) : null;
+    const offset = hasPagination ? Math.max(0, parseInt(offsetParam ?? '0')) : 0;
+
+    let query = supabase
       .from('entries')
-      .select('*, photos(*)')
+      .select('*, photos(*)', hasPagination ? { count: 'exact', head: false } : undefined)
       .eq('user_id', user.id)
       .order('entry_date', { ascending: false });
+
+    if (hasPagination && limit !== null) {
+      query = query.range(offset, offset + limit - 1);
+    }
+
+    const { data: entries, error, count } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -43,7 +56,12 @@ export async function GET() {
       })
     );
 
-    return NextResponse.json({ entries: entriesWithUrls ?? [] });
+    const response: Record<string, unknown> = { entries: entriesWithUrls ?? [] };
+    if (hasPagination) {
+      response.total = count ?? 0;
+      response.hasMore = (count ?? 0) > offset + (limit ?? 0);
+    }
+    return NextResponse.json(response);
   } catch (error) {
     if (
       error instanceof Error &&

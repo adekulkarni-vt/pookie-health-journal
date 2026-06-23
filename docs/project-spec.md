@@ -48,12 +48,6 @@ A compassionate, beautiful, and intuitive health companion that helps users:
 - Supportive, empathetic responses
 - **Note**: No medical advice - educational only
 
-### 6. Wins & Achievements
-- Record health victories
-- Streak tracking
-- Milestone celebrations
-- Motivational reminders
-
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
@@ -73,7 +67,7 @@ src/
 │   ├── page.tsx           # Home page
 │   ├── dashboard/         # Dashboard pages
 │   ├── ask/               # AI chat interface
-│   ├── wins/              # Achievements tracking
+
 │   └── globals.css        # Global styles
 ├── components/            # React components
 │   ├── Navigation.tsx     # Main navigation

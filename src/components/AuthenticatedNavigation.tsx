@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, BarChart3, MessageSquare, Award, Menu, LogOut } from 'lucide-react';
+import { Heart, BarChart3, MessageSquare, Menu, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { UserMenu } from './UserMenu';
 import {
   Sheet,
@@ -15,25 +15,27 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { createSupabaseClient } from '@/lib/supabase/client';
-import { useEffect, useState } from 'react';
-import type { User } from '@supabase/supabase-js';
-import { useRouter } from 'next/navigation';
 
-export function AuthenticatedNavigation() {
+interface Props {
+  userEmail: string | null;
+  userDisplayName: string;
+  userInitials: string;
+  userAvatarUrl: string | null;
+}
+
+export function AuthenticatedNavigation({
+  userEmail,
+  userDisplayName,
+  userInitials,
+  userAvatarUrl,
+}: Props) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const supabase = createSupabaseClient();
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
-  }, []);
 
   const navItems = [
     { href: '/', label: 'Home', icon: Heart },
     { href: '/journey', label: 'My Journey', icon: BarChart3 },
     { href: '/ask', label: 'Ask My Diary', icon: MessageSquare },
-    { href: '/wins', label: 'Wins', icon: Award },
   ];
 
   const handleLogout = async () => {
@@ -41,15 +43,6 @@ export function AuthenticatedNavigation() {
     await supabase.auth.signOut();
     router.push('/login');
   };
-
-  const displayName =
-    user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
-  const initials = displayName
-    .split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
 
   return (
     <nav className="border-b border-gray-200 bg-white">
@@ -122,19 +115,19 @@ export function AuthenticatedNavigation() {
                   <div className="flex items-center gap-3 mb-3">
                     <Avatar className="h-9 w-9">
                       <AvatarImage
-                        src={user?.user_metadata?.avatar_url}
-                        alt={displayName}
+                        src={userAvatarUrl ?? undefined}
+                        alt={userDisplayName}
                       />
                       <AvatarFallback className="bg-pastel-pink text-sm font-medium">
-                        {initials}
+                        {userInitials}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
-                        {displayName}
+                        {userDisplayName}
                       </p>
                       <p className="text-xs text-muted-foreground truncate">
-                        {user?.email}
+                        {userEmail}
                       </p>
                     </div>
                   </div>
