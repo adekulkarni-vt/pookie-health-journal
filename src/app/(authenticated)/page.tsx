@@ -1,8 +1,10 @@
+import { Suspense } from 'react';
 import { getCurrentUser } from '@/lib/auth';
 import { getDashboardData } from '@/lib/dashboard';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 
-export default async function Home() {
+async function DashboardContent() {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -20,7 +22,13 @@ export default async function Home() {
     ? fullName.split(' ')[0]
     : user.email?.split('@')[0] ?? null;
 
+  return <DashboardShell initialData={{ ...data, userName }} />;
+}
+
+export default function Home() {
   return (
-    <DashboardShell initialData={{ ...data, userName }} />
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
   );
 }
