@@ -8,12 +8,13 @@ import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 interface VoiceJournalInputProps {
   onTextChange?: (text: string) => void;
   placeholder?: string;
+  initialText?: string;
 }
 
-export function VoiceJournalInput({ onTextChange, placeholder }: VoiceJournalInputProps) {
+export function VoiceJournalInput({ onTextChange, placeholder, initialText }: VoiceJournalInputProps) {
   const { isListening, transcript, error, isSupported, startListening, stopListening } =
     useSpeechRecognition();
-  const [text, setText] = useState('');
+  const [text, setText] = useState(initialText ?? '');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTranscriptRef = useRef('');
   const onChangeRef = useRef(onTextChange);

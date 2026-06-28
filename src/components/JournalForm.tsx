@@ -83,6 +83,7 @@ export function JournalForm({
 
       <VoiceJournalInput
         key={journalKey}
+        initialText={initialText}
         onTextChange={setJournalText}
         placeholder="What did you eat today? How did your stomach feel? Anything unusual happen?"
       />
