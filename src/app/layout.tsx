@@ -29,6 +29,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){try{var e=localStorage.getItem('pookie-theme');if(e==='dark'||(e===null&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch(e){}})()`
+        }} />
+      </head>
       <body className="min-h-screen antialiased">{children}</body>
     </html>
   );

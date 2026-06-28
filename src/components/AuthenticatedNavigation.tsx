@@ -45,12 +45,12 @@ export function AuthenticatedNavigation({
   };
 
   return (
-    <nav className="border-b border-gray-200 bg-white">
+    <nav className="border-b border-border bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <Heart className="h-6 w-6 text-pastel-pink" />
-            <span className="text-xl font-semibold text-gray-900">PookieHealth</span>
+            <span className="text-xl font-semibold text-foreground">PookieHealth</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -63,7 +63,7 @@ export function AuthenticatedNavigation({
                   'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   pathname === href
                     ? 'bg-pastel-pink text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    : 'text-muted-foreground hover:bg-muted'
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -80,7 +80,7 @@ export function AuthenticatedNavigation({
           {/* Mobile Hamburger */}
           <div className="md:hidden flex items-center gap-2">
             <Sheet>
-              <SheetTrigger className="inline-flex items-center justify-center rounded-lg p-2 text-gray-600 hover:bg-gray-100 transition-colors">
+              <SheetTrigger className="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-muted transition-colors">
                 <Menu className="h-5 w-5" />
               </SheetTrigger>
               <SheetContent side="left" className="w-72">
@@ -102,7 +102,7 @@ export function AuthenticatedNavigation({
                         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                         pathname === href
                           ? 'bg-pastel-pink text-gray-900'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          : 'text-muted-foreground hover:bg-muted'
                       )}
                     >
                       <Icon className="h-5 w-5" />

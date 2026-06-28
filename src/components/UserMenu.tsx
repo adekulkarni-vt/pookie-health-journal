@@ -1,9 +1,11 @@
 'use client';
 
 import { createSupabaseClient } from '@/lib/supabase/client';
-import { LogOut } from 'lucide-react';
+import { LogOut, Moon, Sun } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useTheme } from '@/hooks/use-theme';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import {
   DropdownMenu,
@@ -21,6 +23,7 @@ export function UserMenu() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { dark, toggle: toggleTheme } = useTheme();
 
   useEffect(() => {
     const setupUser = async () => {
@@ -116,6 +119,14 @@ export function UserMenu() {
             </div>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={toggleTheme} className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            <span>Dark Mode</span>
+          </div>
+          <Switch checked={dark} onCheckedChange={toggleTheme} />
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleLogout}

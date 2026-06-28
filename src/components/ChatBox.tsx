@@ -132,7 +132,7 @@ export function ChatBox() {
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-border px-5 py-4">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pastel-purple">
-          <MessageSquare className="h-4 w-4 text-gray-900" />
+          <MessageSquare className="h-4 w-4 text-foreground" />
         </div>
         <div>
           <h2 className="text-sm font-semibold text-card-foreground">
@@ -161,7 +161,7 @@ export function ChatBox() {
             <div
               className={`max-w-[80%] rounded-xl px-4 py-2.5 text-sm leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-pastel-pink text-gray-900'
+                    ? 'bg-pastel-pink text-gray-900'
                   : 'bg-muted text-foreground'
               }`}
             >

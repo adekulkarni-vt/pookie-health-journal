@@ -37,8 +37,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="mt-12 rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
-        <p className="text-gray-600">
+      <div className="mt-12 rounded-lg border-2 border-dashed border-border p-8 text-center">
+        <p className="text-muted-foreground">
           Dashboard visualizations will be implemented here
         </p>
       </div>

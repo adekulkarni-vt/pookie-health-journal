@@ -88,7 +88,7 @@ export function JournalDialog({ open, onClose, onSaved, entry }: JournalDialogPr
       />
       <div className="relative z-10 w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto rounded-none sm:rounded-2xl bg-card border-0 sm:border-border shadow-xl animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200 flex flex-col">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-pastel-pink/30 bg-pastel-pink px-5 py-4">
-          <h2 className="text-base font-semibold text-gray-900">
+          <h2 className="text-base font-semibold text-foreground">
             {isEdit ? 'Edit Log' : 'Add Log'}
           </h2>
           <button

@@ -26,6 +26,28 @@
     --radius: 0.75rem;
   }
 
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 96%;
+    --card: 222 47% 9%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 340 80% 85%;
+    --primary-foreground: 222 47% 6%;
+    --secondary: 270 70% 80%;
+    --secondary-foreground: 222 47% 6%;
+    --muted: 215 28% 16%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 220 60% 75%;
+    --accent-foreground: 222 47% 6%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 210 40% 96%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 340 80% 60%;
+  }
+
   html {
     @apply scroll-smooth;
   }
@@ -37,6 +59,15 @@
       hsl(var(--background)),
       hsl(340 80% 92% / 0.05),
       hsl(270 80% 92% / 0.05)
+    );
+  }
+
+  .dark body {
+    background-image: linear-gradient(
+      to bottom right,
+      hsl(var(--background)),
+      hsl(340 80% 60% / 0.04),
+      hsl(270 70% 60% / 0.04)
     );
   }
 }
